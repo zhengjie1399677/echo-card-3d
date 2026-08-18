@@ -11,7 +11,7 @@ import {
   Layers,
   Palette
 } from 'lucide-react';
-import { toPng } from 'html-to-image';
+import { toPng, getFontEmbedCSS } from 'html-to-image';
 
 // Unsplash premium stock images that support CORS
 const PRESET_IMAGES = [
@@ -132,6 +132,8 @@ function App() {
   const [isMobile, setIsMobile] = useState(false);
   
   const exportAreaRef = useRef<HTMLDivElement>(null);
+  // Cache the font embed CSS after first export to avoid re-fetching fonts on every export
+  const fontEmbedCSSCache = useRef<string | null>(null);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -252,17 +254,25 @@ function App() {
     }
 
     // Wait a brief frame for layout reflow
-    await new Promise(r => setTimeout(r, 150));
+    await new Promise(r => setTimeout(r, 100));
 
     try {
+      // Pre-generate font embed CSS and cache it — only fetched on the first export.
+      // This avoids html-to-image re-fetching all font files on every subsequent export.
+      if (!fontEmbedCSSCache.current) {
+        fontEmbedCSSCache.current = await getFontEmbedCSS(exportAreaRef.current);
+      }
+
       const dataUrl = await toPng(exportAreaRef.current, {
-        cacheBust: true,
+        // cacheBust is intentionally omitted: it would append timestamps to every
+        // font URL, bypassing the browser cache and forcing a full re-download each time.
         backgroundColor: 'transparent',
         style: {
           transform: 'none',
           transformOrigin: 'top left'
         },
-        pixelRatio: 2 // Retain high-definition 2x scaling
+        pixelRatio: 3, // 3x for sharp, high-resolution output
+        fontEmbedCSS: fontEmbedCSSCache.current, // Use cached font CSS — skips network on 2nd+ export
       });
 
       const link = document.createElement('a');
