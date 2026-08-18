@@ -1,0 +1,16 @@
+{
+  "short_name": "EchoCard3D",
+  "name": "Echo Card 3D - 互动印章与卡片定制器",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0a0b0d",
+  "theme_color": "#8b5cf6",
+  "display": "standalone",
+  "orientation": "portrait"
+}
